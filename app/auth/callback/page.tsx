@@ -7,7 +7,7 @@ import { createPublicOauthClient } from "@osdk/oauth";
 // 1. Re-initialize the EXACT same auth client you have on your home page
 const auth = createPublicOauthClient("43f28f760482c1799f0bd6b47945a25a", //client id
   "https://sanghavi.usw-17.palantirfoundry.com", //Foundry base url
-  "http://localhost:3000/auth/callback", // Redirected URL Must match exactly what is in Foundry
+  "https://funding-ui.vercel.app/",//"http://localhost:3000/auth/callback", // Redirected URL Must match exactly what is in Foundry
   {
     postLoginPage: typeof window !== "undefined" ? window.location.toString() : "http://localhost:3000",
     scopes: [
