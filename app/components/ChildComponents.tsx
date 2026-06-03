@@ -2,22 +2,24 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getWireBankContactsIntentFlag, getAppEventsIntentFlag, getTrackingItemsIntentFlag, getTrackingItemsByLoanNumber, getAppEventsByLoanNumber, getWireBankContactsByLoanNumber, getComplianceEaseByLoanNumber, getCashToCloseByLoanNumber, getFraudguardByLoanNumber, getLoanDocumentsByLoanNumber, markTrackingItemsComplete, updateTrackingItem, updateWireBank, uploadLoanDocument, modifyLoanDocument, deleteLoanDocument, TrackingItem, ApplicationEvent, WireBankContactData, ComplianceEaseData, CashToCloseData, FraudGuardData, LoanDocumentData } from './data';
 
 // --- Reusable Tile Header ---
-const TileHeader = ({ 
-  title, 
-  count, 
-  hasStatus, 
-  hasFlag, 
+const TileHeader = ({
+  title,
+  count,
+  hasStatus,
+  hasFlag,
   flagColor,
   selectedStatus,
-  onStatusSelect
-}: { 
-  title: string, 
-  count?: number, 
-  hasStatus?: boolean, 
-  hasFlag?: boolean, 
+  onStatusSelect,
+  statuses = ["All", "Completed", "Problem", "In Process"]
+}: {
+  title: string,
+  count?: number,
+  hasStatus?: boolean,
+  hasFlag?: boolean,
   flagColor?: string,
   selectedStatus?: string | null,
-  onStatusSelect?: (status: string | null) => void
+  onStatusSelect?: (status: string | null) => void,
+  statuses?: string[]
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -34,8 +36,6 @@ const TileHeader = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [dropdownOpen]);
 
-  const statuses = ["All", "Completed", "Problem", "In Process"];
-
   return (
     <div className="bg-[#194b8c] text-white px-4 py-2 flex justify-between items-center text-sm font-medium relative select-none">
       <div className="flex items-center gap-3">
@@ -45,7 +45,7 @@ const TileHeader = ({
       <div className="flex items-center gap-2">
         {hasStatus && (
           <div className="relative" ref={dropdownRef}>
-            <button 
+            <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className={`border border-white/30 px-3 py-0.5 rounded-full text-xs hover:bg-white/10 transition flex items-center gap-1.5 cursor-pointer active:scale-95 duration-100 ${selectedStatus && selectedStatus !== 'All' ? 'bg-[#2a62a9] border-[#2a62a9] font-semibold' : ''}`}
             >
@@ -54,7 +54,7 @@ const TileHeader = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {/* Status Dropdown Options Menu */}
             {dropdownOpen && (
               <div className="absolute right-0 mt-1.5 w-36 bg-white text-slate-800 rounded shadow-md border border-slate-200 py-1 z-40 overflow-hidden">
@@ -67,11 +67,10 @@ const TileHeader = ({
                         if (onStatusSelect) onStatusSelect(status === 'All' ? null : status);
                         setDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors flex justify-between items-center cursor-pointer ${
-                        isSelected 
-                          ? 'bg-blue-50 text-blue-700 font-semibold' 
-                          : 'hover:bg-slate-50 text-slate-600'
-                      }`}
+                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors flex justify-between items-center cursor-pointer ${isSelected
+                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        : 'hover:bg-slate-50 text-slate-600'
+                        }`}
                     >
                       <span>{status}</span>
                       {isSelected && <span className="text-blue-600 font-bold">✓</span>}
@@ -94,7 +93,7 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
   const [loading, setLoading] = useState(true);
   const [flagColor, setFlagColor] = useState<'red' | 'green'>('red');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+
   // Popup state
   const [isUpdatePopupOpen, setIsUpdatePopupOpen] = useState(false);
   const [updateFormData, setUpdateFormData] = useState({
@@ -180,7 +179,7 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
 
     setIsUpdating(true);
     const trackingItemId = Array.from(selectedIds)[0];
-    
+
     // Format date properly for OSDK if needed, assuming string for now based on requirements
     const success = await updateTrackingItem(client, trackingItemId, updateFormData);
     if (success) {
@@ -194,20 +193,37 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
   };
 
   let displayedData = filterIds && filterIds.length > 0 ? data.filter(item => filterIds.includes(item.id)) : data;
-  if (selectedStatus) {
+
+  // Compute unique statuses dynamically from the items
+  const baseData = filterIds && filterIds.length > 0 ? data.filter(item => filterIds.includes(item.id)) : data;
+  const uniqueStatuses = Array.from(new Set(baseData.map(item => item.status).filter((status): status is string => !!status)));
+  const statusesList = ["All", ...uniqueStatuses];
+
+  useEffect(() => {
+    if (selectedStatus && selectedStatus !== 'All') {
+      const baseData = filterIds && filterIds.length > 0 ? data.filter(item => filterIds.includes(item.id)) : data;
+      const uniqueStatusesSet = new Set(baseData.map(item => item.status).filter(Boolean));
+      if (!uniqueStatusesSet.has(selectedStatus)) {
+        setSelectedStatus(null);
+      }
+    }
+  }, [data, filterIds, selectedStatus]);
+
+  if (selectedStatus && selectedStatus !== 'All') {
     displayedData = displayedData.filter(item => item.status === selectedStatus);
   }
 
   return (
     <div className="border border-slate-200 bg-white relative rounded-md overflow-hidden shadow-sm">
-      <TileHeader 
-        title="Tracking Items" 
-        count={displayedData.length} 
-        hasStatus 
-        hasFlag 
-        flagColor={flagColor} 
+      <TileHeader
+        title="Tracking Items"
+        count={displayedData.length}
+        hasStatus
+        hasFlag
+        flagColor={flagColor}
         selectedStatus={selectedStatus}
         onStatusSelect={setSelectedStatus}
+        statuses={statusesList}
       />
       <div className="overflow-x-auto min-h-[200px] flex flex-col justify-between p-1">
         {loading ? <div className="p-4 text-center text-slate-400">Loading...</div> : (
@@ -237,13 +253,13 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
           </table>
         )}
         <div className="p-3 flex gap-2 border-t border-slate-100 mt-2">
-          <button 
+          <button
             className={`${isCompleting ? 'bg-slate-300 cursor-not-allowed' : 'bg-black hover:bg-gray-800 cursor-pointer'} text-white text-xs px-4 py-1.5 rounded-full transition-colors`}
             disabled={isCompleting}
           >
             Insert Tracking Item +
           </button>
-          <button 
+          <button
             className={`${isCompleteButtonEnabled && !isCompleting ? 'bg-black hover:bg-gray-800 cursor-pointer' : 'bg-slate-300 cursor-not-allowed'} text-white text-xs px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5`}
             disabled={!isCompleteButtonEnabled || isCompleting}
             onClick={handleCompleteClick}
@@ -260,7 +276,7 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
               <span>Complete ✓</span>
             )}
           </button>
-          <button 
+          <button
             className={`${isUpdateButtonEnabled && !isCompleting ? 'bg-black hover:bg-gray-800 cursor-pointer' : 'bg-slate-300 cursor-not-allowed'} text-white text-xs px-4 py-1.5 rounded-full transition-colors`}
             disabled={!isUpdateButtonEnabled || isCompleting}
             onClick={handleUpdateClick}
@@ -284,35 +300,35 @@ export const TrackingItemsSection = ({ client, loanNumber, filterIds }: { client
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Ti Name <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.tiName} onChange={e => setUpdateFormData({...updateFormData, tiName: e.target.value})} />
+                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.tiName} onChange={e => setUpdateFormData({ ...updateFormData, tiName: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Ti Status <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.tiStatus} onChange={e => setUpdateFormData({...updateFormData, tiStatus: e.target.value})} />
+                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.tiStatus} onChange={e => setUpdateFormData({ ...updateFormData, tiStatus: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Due Date <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.dueDate} onChange={e => setUpdateFormData({...updateFormData, dueDate: e.target.value})} />
+                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.dueDate} onChange={e => setUpdateFormData({ ...updateFormData, dueDate: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Has Excp <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.hasExcp} onChange={e => setUpdateFormData({...updateFormData, hasExcp: e.target.value})} />
+                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.hasExcp} onChange={e => setUpdateFormData({ ...updateFormData, hasExcp: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">Prior To <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.priorTo} onChange={e => setUpdateFormData({...updateFormData, priorTo: e.target.value})} />
+                  <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={updateFormData.priorTo} onChange={e => setUpdateFormData({ ...updateFormData, priorTo: e.target.value })} />
                 </div>
               </div>
             </div>
             <div className="p-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 rounded-b-md">
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-100 transition-colors"
                 onClick={() => setIsUpdatePopupOpen(false)}
                 disabled={isUpdating}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-white bg-black rounded hover:bg-gray-800 transition-colors disabled:bg-gray-400"
                 onClick={handleUpdateSubmit}
                 disabled={isUpdating}
@@ -423,20 +439,20 @@ export const WireBankContactsSection = ({ client, loanNumber, filterIds }: { cli
 
   const handleSubmitClick = async () => {
     setIsSubmitting(true);
-    
+
     // Process updates for each row
     for (let i = 0; i < editData.length; i++) {
       const updatedRow = editData[i];
-      
+
       // Compare rows to only update if changed? We can just send all if needed.
       // But we MUST have an ID to update. Let's assume we pass the ID if available, or just update based on the object reference.
-      const wireObjId = updatedRow.id; 
-      
+      const wireObjId = updatedRow.id;
+
       if (wireObjId && client) {
         await updateWireBank(client, wireObjId, updatedRow);
       }
     }
-    
+
     // In mock mode or after SDK update, let's just reload.
     if (!client) {
       // For mock, just update local state visually
@@ -444,7 +460,7 @@ export const WireBankContactsSection = ({ client, loanNumber, filterIds }: { cli
     } else {
       reloadData();
     }
-    
+
     setIsEditing(false);
     setIsSubmitting(false);
   };
@@ -509,15 +525,15 @@ export const WireBankContactsSection = ({ client, loanNumber, filterIds }: { cli
         <div className="flex justify-end p-2 mt-4 gap-2">
           {isEditing ? (
             <>
-              <button 
-                onClick={handleCancelClick} 
+              <button
+                onClick={handleCancelClick}
                 disabled={isSubmitting}
                 className="border border-slate-300 text-slate-600 text-xs px-4 py-1.5 rounded hover:bg-slate-50 disabled:opacity-50"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleSubmitClick} 
+              <button
+                onClick={handleSubmitClick}
                 disabled={isSubmitting}
                 className="bg-black text-white text-xs px-4 py-1.5 rounded hover:bg-gray-800 disabled:opacity-50"
               >
@@ -525,8 +541,8 @@ export const WireBankContactsSection = ({ client, loanNumber, filterIds }: { cli
               </button>
             </>
           ) : (
-            <button 
-              onClick={handleEditClick} 
+            <button
+              onClick={handleEditClick}
               disabled={loading || data.length === 0}
               className="border border-slate-300 text-slate-600 text-xs px-4 py-1.5 rounded flex items-center gap-2 hover:bg-slate-50 disabled:opacity-50"
             >
@@ -776,7 +792,7 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
     }
 
     setIsUploading(true);
-    
+
     // Convert to attachment format if needed by OSDK, or pass raw file depending on setup.
     // For now we pass the file directly to uploadLoanDocument
     const success = await uploadLoanDocument(client, {
@@ -908,8 +924,8 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
               {data.map((row, i) => {
                 const isSelected = selectedDocId === row.id;
                 return (
-                  <tr 
-                    key={row.id || i} 
+                  <tr
+                    key={row.id || i}
                     onClick={() => setSelectedDocId(isSelected ? null : row.id)}
                     className={`border-b border-slate-100 hover:bg-blue-50/40 transition-colors cursor-pointer ${isSelected ? 'bg-blue-50/30 outline outline-1 outline-blue-300' : ''}`}
                   >
@@ -935,21 +951,21 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
             </tbody>
           </table>
         )}
-        
+
         <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100">
           <button onClick={openUploadModal} className="bg-black text-white px-4 py-1.5 text-xs font-medium rounded-full shadow-sm hover:bg-gray-800 transition-colors flex items-center gap-2">
             Upload Document
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           </button>
-          <button 
-            onClick={openEditModal} 
+          <button
+            onClick={openEditModal}
             disabled={!selectedDocId}
             className={`${selectedDocId ? 'bg-black hover:bg-gray-800 cursor-pointer' : 'bg-slate-300 cursor-not-allowed'} text-white px-4 py-1.5 text-xs font-medium rounded-full shadow-sm transition-colors flex items-center gap-2`}
           >
             Edit Document
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
           </button>
-          <button 
+          <button
             onClick={handleRemoveDocument}
             disabled={!selectedDocId || loading}
             className={`${selectedDocId && !loading ? 'bg-black hover:bg-gray-800 cursor-pointer' : 'bg-slate-300 cursor-not-allowed'} text-white px-4 py-1.5 text-xs font-medium rounded-full shadow-sm transition-colors flex items-center gap-2`}
@@ -969,7 +985,7 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
             <div className="p-4 space-y-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Document Name <span className="text-red-500">*</span></label>
-                <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={uploadData.documentName} onChange={e => setUploadData({...uploadData, documentName: e.target.value})} placeholder="e.g. W-2 Form" />
+                <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={uploadData.documentName} onChange={e => setUploadData({ ...uploadData, documentName: e.target.value })} placeholder="e.g. W-2 Form" />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Loan Documents <span className="text-red-500">*</span></label>
@@ -977,7 +993,7 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Description <span className="text-red-500">*</span></label>
-                <textarea className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" rows={3} value={uploadData.description} onChange={e => setUploadData({...uploadData, description: e.target.value})} placeholder="Document description..." />
+                <textarea className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" rows={3} value={uploadData.description} onChange={e => setUploadData({ ...uploadData, description: e.target.value })} placeholder="Document description..." />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Uploaded Date Time</label>
@@ -985,14 +1001,14 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
               </div>
             </div>
             <div className="p-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 rounded-b-md">
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
                 onClick={() => setIsUploadModalOpen(false)}
                 disabled={isUploading}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400"
                 onClick={handleUploadSubmit}
                 disabled={isUploading}
@@ -1013,7 +1029,7 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
             <div className="p-4 space-y-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Document Name <span className="text-red-500">*</span></label>
-                <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={editData.documentName} onChange={e => setEditData({...editData, documentName: e.target.value})} placeholder="e.g. W-2 Form" />
+                <input type="text" className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" value={editData.documentName} onChange={e => setEditData({ ...editData, documentName: e.target.value })} placeholder="e.g. W-2 Form" />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Loan Documents</label>
@@ -1027,7 +1043,7 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Description <span className="text-red-500">*</span></label>
-                <textarea className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" rows={3} value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} placeholder="Document description..." />
+                <textarea className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" rows={3} value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })} placeholder="Document description..." />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 mb-1">Uploaded Date Time</label>
@@ -1035,14 +1051,14 @@ export const LoanDocumentsSection = ({ client, loanNumber }: { client?: any; loa
               </div>
             </div>
             <div className="p-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 rounded-b-md">
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-full hover:bg-slate-50 transition-colors"
                 onClick={() => setIsEditModalOpen(false)}
                 disabled={isEditing}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="px-4 py-1.5 text-xs font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400"
                 onClick={handleEditSubmit}
                 disabled={isEditing}
