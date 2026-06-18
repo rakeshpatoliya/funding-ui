@@ -528,26 +528,28 @@ export const getLoanDocumentsByLoanNumber = async (clientOrLoanNumber: any, mayb
 };
 
 // --- MOCK SYNC OBJECTS (Exported directly as requested) ---
+const defaultLoanNum = process.env.DEFAULT_LOAN_NUMBER || "0100578962";
+
 export const LoanDocumentMock: LoanDocumentData[] = [
-  { id: "doc1", loanNumber: "0100578962", documentName: "Initial Application", fileName: "1003_application.pdf", uploadedDateTime: "2025-05-10T10:00:00Z", description: "Signed 1003 application form", fileUrl: "#preview-1003" },
-  { id: "doc2", loanNumber: "0100578962", documentName: "Credit Report", fileName: "credit_report.pdf", uploadedDateTime: "2025-05-11T14:30:00Z", description: "Equifax credit report", fileUrl: "#preview-credit" },
-  { id: "doc3", loanNumber: "0100578962", documentName: "Income Verification", fileName: "w2_2024.pdf", uploadedDateTime: "2025-05-12T09:15:00Z", description: "W-2 for year 2024", fileUrl: "#preview-w2" }
+  { id: "doc1", loanNumber: defaultLoanNum, documentName: "Initial Application", fileName: "1003_application.pdf", uploadedDateTime: "2025-05-10T10:00:00Z", description: "Signed 1003 application form", fileUrl: "#preview-1003" },
+  { id: "doc2", loanNumber: defaultLoanNum, documentName: "Credit Report", fileName: "credit_report.pdf", uploadedDateTime: "2025-05-11T14:30:00Z", description: "Equifax credit report", fileUrl: "#preview-credit" },
+  { id: "doc3", loanNumber: defaultLoanNum, documentName: "Income Verification", fileName: "w2_2024.pdf", uploadedDateTime: "2025-05-12T09:15:00Z", description: "W-2 for year 2024", fileUrl: "#preview-w2" }
 ];
 
 export const WireBankContact: WireBankContactData[] = [
-  { id: "wire-bank-1", loanNumber: "0100578962", addressType: "Wire Bank-Final", name: "Mary L. Johnson", city: "Houston", state: "FL", zip: "77002-3344", shortName: "MJOHNSON", aba: "111000026", account: "100057896202", accountName: "Johnson Household" },
-  { id: "wire-bank-2", loanNumber: "0100578962", addressType: "Wire Revision Bank-Final", name: "Patricia M. Davis", city: "San Antonio", state: "TX", zip: "78205-7788", shortName: "PDAVIS", aba: "111000028", account: "100057896204", accountName: "Davis Family LLC" }
+  { id: "wire-bank-1", loanNumber: defaultLoanNum, addressType: "Wire Bank-Final", name: "Mary L. Johnson", city: "Houston", state: "FL", zip: "77002-3344", shortName: "MJOHNSON", aba: "111000026", account: "100057896202", accountName: "Johnson Household" },
+  { id: "wire-bank-2", loanNumber: defaultLoanNum, addressType: "Wire Revision Bank-Final", name: "Patricia M. Davis", city: "San Antonio", state: "TX", zip: "78205-7788", shortName: "PDAVIS", aba: "111000028", account: "100057896204", accountName: "Davis Family LLC" }
 ];
 
 export const ComplianceEase: ComplianceEaseData[] = [
-  { id: "comp-ease-1", loanNumber: "0100578962", reqNum: 1, date: "Apr 12, 2025", userId: "web", reqScore: "pass", trid: "N/A", reqType: "HCL", status: "error", method: "order", isHoepa: "pass", isHpml: "pass", licenceAudit: "pass" },
-  { id: "comp-ease-2", loanNumber: "0100578962", reqNum: 2, date: "Apr 12, 2025", userId: "api", reqScore: "pass", trid: "N/A", reqType: "HCL", status: "success", method: "order", isHoepa: "pass", isHpml: "pass", licenceAudit: "pass" }
+  { id: "comp-ease-1", loanNumber: defaultLoanNum, reqNum: 1, date: "Apr 12, 2025", userId: "web", reqScore: "pass", trid: "N/A", reqType: "HCL", status: "error", method: "order", isHoepa: "pass", isHpml: "pass", licenceAudit: "pass" },
+  { id: "comp-ease-2", loanNumber: defaultLoanNum, reqNum: 2, date: "Apr 12, 2025", userId: "api", reqScore: "pass", trid: "N/A", reqType: "HCL", status: "success", method: "order", isHoepa: "pass", isHpml: "pass", licenceAudit: "pass" }
 ];
 
 export const CashToCloseDataArr: CashToCloseData[] = [
-  { loanNumber: "0100578962", maxBaseLoanAmount: "15000", actualBaseAmount: "12000", proposedPayment: "5100", liquidAssetsAvailable: "45000", minBaseLoanAmount: "7000", escrowShortage: "3200", cashToClose: "6000", cashToBorrower: "45000" }
+  { loanNumber: defaultLoanNum, maxBaseLoanAmount: "15000", actualBaseAmount: "12000", proposedPayment: "5100", liquidAssetsAvailable: "45000", minBaseLoanAmount: "7000", escrowShortage: "3200", cashToClose: "6000", cashToBorrower: "45000" }
 ];
 
 export const Fraudguard: FraudGuardData[] = [
-  { loanNumber: "0100578962", fraudGuardScore: "1000", fraudGuardService: "Complete", lastRunDate: "Jun 26, 2025", tiName: "Fraudguard Report-Closer", requestType: "Order", notaryName: "Jack Rose", notaryPhoneNumber: "808452211", tiStatus: "Completed" }
+  { loanNumber: defaultLoanNum, fraudGuardScore: "1000", fraudGuardService: "Complete", lastRunDate: "Jun 26, 2025", tiName: "Fraudguard Report-Closer", requestType: "Order", notaryName: "Jack Rose", notaryPhoneNumber: "808452211", tiStatus: "Completed" }
 ];

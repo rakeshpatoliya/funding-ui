@@ -17,31 +17,37 @@ import {
 import LoanDashboard from "./components/LoanDashboard";
 import FundingDashboard from "./components/FundingDashboard";
 
-// --- OSDK Configuration ---
-const auth = createPublicOauthClient("43f28f760482c1799f0bd6b47945a25a", //client id
-  "https://sanghavi.usw-17.palantirfoundry.com", //Foundry base url
-  "https://funding-ui.vercel.app/",//"http://localhost:3000/auth/callback", // Redirected URL Must match exactly what is in Foundry
-  {
-    postLoginPage: typeof window !== "undefined" ? window.location.toString() : "http://localhost:3000",
-    scopes: [
-      "api:read-data",
-      "api:write-data",
-      "api:aip-agents-read",
-      "api:aip-agents-write"
-    ]
-  }
-);
+let auth: any;
+let client: any;
 
-const client = createClient(
-  "https://sanghavi.usw-17.palantirfoundry.com", //Foundry base url
-  "ri.ontology.main.ontology.3ca02c89-3deb-4e25-aeba-4fe247684080",//"YOUR_ONTOLOGY_RID", // Found in your Developer Console SDK page
-  auth
-);
+if (typeof window !== "undefined") {
+  // --- OSDK Configuration ---
+  auth = createPublicOauthClient(
+    process.env.CLIENT_ID || "", //client id
+    process.env.FOUNDRY_BASE_URL || "", //Foundry base url
+    window.location.origin, // Redirected URL Must match exactly what is in Foundry
+    {
+      postLoginPage: window.location.toString(),
+      scopes: [
+        "api:read-data",
+        "api:write-data",
+        "api:aip-agents-read",
+        "api:aip-agents-write"
+      ]
+    }
+  );
+
+  client = createClient(
+    process.env.FOUNDRY_BASE_URL || "", //Foundry base url
+    process.env.ONTOLOGY_RID || "", // Found in your Developer Console SDK page
+    auth
+  );
+}
 
 export default function Home() {
   // --- State Hooks ---
   //const [loanNumber, setLoanNumber] = useState<string>("");
-  const [loanNumber, setLoanNumber] = useState<string>("0100578962");
+  const [loanNumber, setLoanNumber] = useState<string>(process.env.DEFAULT_LOAN_NUMBER || "");
   const [loanData, setLoanData] = useState<any | null>(null); // Replace 'any' with your actual LoanInformation type if available
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +110,7 @@ export default function Home() {
           <div className="relative flex-grow sm:w-60">
             <input
               type="text"
-              placeholder="e.g. 0100578962"
+              placeholder={`e.g. ${process.env.DEFAULT_LOAN_NUMBER || "0100578962"}`}
               value={loanNumber}
               onChange={(e) => setLoanNumber(e.target.value)}
               className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:border-blue-500 bg-slate-50/50"
@@ -152,21 +158,3 @@ export default function Home() {
     </div>
   );
 }
-
-/*
-const auth = createPublicOauthClient("43f28f760482c1799f0bd6b47945a25a", //client id
-  "https://sanghavi.usw-17.palantirfoundry.com", //Foundry base url
-  "http://localhost:3000/auth/callback", // Redirected URL Must match exactly what is in Foundry
-  {
-    // Add the options object as the 4th argument
-    postLoginPage: typeof window !== "undefined" ? window.location.toString() : "http://localhost:3000"
-  }
-);
-
-const client = createClient(
-  "https://sanghavi.usw-17.palantirfoundry.com", //Foundry base url
-  "ri.ontology.main.ontology.3ca02c89-3deb-4e25-aeba-4fe247684080",//"YOUR_ONTOLOGY_RID", // Found in your Developer Console SDK page
-  auth
-);
-
-*/

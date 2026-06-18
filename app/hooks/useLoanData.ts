@@ -18,6 +18,9 @@ export function useLoanData(client: any, loanNumberToFetch: string) {
       setErrorMessage('');
       
       try {
+        if (!client) {
+          throw new Error('OSDK client not initialized.');
+        }
         const rawResponse = await client(getLoanDataByLoanNumber).executeFunction({ loanNum: loanNumberToFetch });
         const response = rawResponse?.data ?? rawResponse;
 
@@ -128,7 +131,12 @@ export function useLoanData(client: any, loanNumberToFetch: string) {
         setErrorMessage('');
       } catch (error: any) {
         setIsError(true);
-        setErrorMessage(error.message || "Failed to fetch loan data.");
+        const errMsg = error.message || "";
+        if (errMsg.includes("400") || errMsg.includes("404") || errMsg.includes("No loan data")) {
+          setErrorMessage(`Loan number ${loanNumberToFetch} does not exist.`);
+        } else {
+          setErrorMessage(errMsg || "Failed to fetch loan data.");
+        }
       } finally {
         setIsLoading(false);
       }

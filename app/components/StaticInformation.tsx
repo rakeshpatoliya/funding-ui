@@ -54,14 +54,14 @@ export const StaticInformation: React.FC<Props> = ({ data, isLoading, isError, e
       {!isCollapsed && (
         <div className="p-4 bg-slate-50/50">
           {isError && (
-            <div className="text-red-500 text-sm mb-4">
-              Error loading data. {errorMessage ? errorMessage : ''}
+            <div className="text-red-500 text-sm mb-4 font-medium">
+              {errorMessage ? errorMessage : 'Error loading data.'}
             </div>
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-stretch">
             {/* Column 1 (Box Card) */}
-            <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-sm flex flex-col gap-4 justify-center">
+            <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-sm flex flex-col gap-4 justify-start">
               {renderField('Loan Number', data?.loanNumber)}
               {renderField('Borrower(s) Name', data?.borrowerName)}
               {renderField('Property Address',  data?.propertyAddress)}
@@ -70,7 +70,7 @@ export const StaticInformation: React.FC<Props> = ({ data, isLoading, isError, e
             {/* Middle portion Card (Columns 2, 3, and 4) */}
             <div className="md:col-span-3 bg-white border border-slate-200/80 rounded-md p-4 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
               {/* Column 2 */}
-              <div className="flex flex-col gap-4 justify-between py-1 md:border-r md:border-slate-200/80 md:pr-6">
+              <div className="flex flex-col gap-4 justify-start py-1 md:border-r md:border-slate-200/80 md:pr-6">
                 {renderField('Loan Amount', data?.loanAmount)}
                 {renderField('Interest Rate', data?.interestRate)}
                 {renderField('Cash Out/No Cash Out?', data?.cashOut)}
@@ -78,7 +78,7 @@ export const StaticInformation: React.FC<Props> = ({ data, isLoading, isError, e
               </div>
 
               {/* Column 3 */}
-              <div className="flex flex-col gap-4 justify-between py-1 md:border-r md:border-slate-200/80 md:pr-6 md:pl-2">
+              <div className="flex flex-col gap-4 justify-start py-1 md:border-r md:border-slate-200/80 md:pr-6 md:pl-2">
                 {renderField('Loan Type', data?.loanType)}
                 {renderField('Doc Type', data?.docType)}
                 {renderField('Product', data?.product)}
@@ -86,7 +86,7 @@ export const StaticInformation: React.FC<Props> = ({ data, isLoading, isError, e
               </div>
 
               {/* Column 4 */}
-              <div className="flex flex-col gap-4 justify-between py-1 md:pl-2">
+              <div className="flex flex-col gap-4 justify-start py-1 md:pl-2">
                 {renderField('Loan Status', data?.loanStatus)}
                 {renderField('Funding Rework TI', data?.fundingReworkTI)}
                 {renderField('Payoff Shortage TI', data?.payoffShortageTI)}
@@ -95,7 +95,7 @@ export const StaticInformation: React.FC<Props> = ({ data, isLoading, isError, e
             </div>
 
             {/* Column 5 (Box Card) */}
-            <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-sm flex flex-col gap-4 justify-center">
+            <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-sm flex flex-col gap-4 justify-start">
               {renderField('Scheduled Closing Date', data?.scheduledClosingDate)}
               {renderField('Scheduled Disbursement Date', data?.scheduledDisbursementDate)}
               {renderField('First Payment Date', data?.firstPaymentDate)}
